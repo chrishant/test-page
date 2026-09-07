@@ -40,6 +40,29 @@
         info.downlinkMbps = navigator.connection.downlink;
       }
 
+      // Attempt to parse an Android model number out of the UA string.
+      // iOS/Safari never includes this - Apple strips it deliberately.
+      const androidMatch = navigator.userAgent.match(/Android[^;]*;\s*([^)]+)\)/);
+      if (androidMatch) {
+        info.androidModelRaw = androidMatch[1].trim();
+      }
+
+      // GPU renderer string via WebGL - can hint at chipset family
+      // (e.g. "Adreno 660" -> Snapdragon 888-series, "Mali-G78" -> certain Exynos/MediaTek chips)
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+          const dbgInfo = gl.getExtension('WEBGL_debug_renderer_info');
+          if (dbgInfo) {
+            info.gpuVendor = gl.getParameter(dbgInfo.UNMASKED_VENDOR_WEBGL);
+            info.gpuRenderer = gl.getParameter(dbgInfo.UNMASKED_RENDERER_WEBGL);
+          }
+        }
+      } catch (err) {
+        info.gpuLookupError = 'unavailable';
+      }
+
       // IP-based location + ISP, no permission prompt needed
       try {
         const res = await fetch('https://ipapi.co/json/');

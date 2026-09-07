@@ -1,17 +1,79 @@
-const express = require('express');
-const fs = require('fs');
-const app = express();
-app.use(express.json());
-app.use(express.static('public')); // put test.html in /public
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Visit Test Page</title>
+<style>
+  body { font-family: sans-serif; max-width: 600px; margin: 60px auto; color: #222; }
+  #status { margin-top: 20px; padding: 12px; background: #f4f4f4; border-radius: 6px; }
+</style>
+</head>
+<body>
+  <h1>Thanks for visiting</h1>
+  <p>This page logs basic visit info (IP, device, timestamp) for testing purposes.</p>
+  <div id="status">Collecting info...</div>
 
-app.post('/api/log-visit', (req, res) => {
-  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
-  const entry = { ip, ...req.body, receivedAt: new Date().toISOString() };
-  
-  fs.appendFileSync('visits.log', JSON.stringify(entry) + '\n');
-  console.log('New visit logged:', entry);
-  
-  res.sendStatus(200);
-});
+  <script>
+    async function collectVisitorInfo() {
+      const info = {
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        screenResolution: `${window.screen.width}x${window.screen.height}`,
+        viewport: `${window.innerWidth}x${window.innerHeight}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        referrer: document.referrer || 'direct',
+      };
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+      // Optional: rough IP-based location, no permission prompt needed
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const ipData = await res.json();
+        info.ipCity = ipData.city;
+        info.ipRegion = ipData.region;
+        info.ipCountry = ipData.country_name;
+      } catch (err) {
+        info.ipLookupError = 'unavailable';
+      }
+
+      // Precise geolocation - triggers a browser permission prompt
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            info.preciseLat = pos.coords.latitude;
+            info.preciseLng = pos.coords.longitude;
+            finish(info);
+          },
+          (err) => {
+            info.geoError = err.message;
+            finish(info);
+          },
+          { timeout: 5000 }
+        );
+      } else {
+        finish(info);
+      }
+    }
+
+    // Your unique webhook.site URL
+    const ENDPOINT_URL = 'https://webhook.site/c2352c50-5eff-4ac0-8fd7-413d3897049e';
+
+    async function finish(info) {
+      document.getElementById('status').innerText = 'Info collected. Sending...';
+      try {
+        await fetch(ENDPOINT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(info),
+        });
+        document.getElementById('status').innerText = 'Done.';
+      } catch (err) {
+        document.getElementById('status').innerText = 'Failed to send info.';
+      }
+    }
+
+    window.addEventListener('load', collectVisitorInfo);
+  </script>
+</body>
+</html>

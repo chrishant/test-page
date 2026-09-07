@@ -1,0 +1,17 @@
+const express = require('express');
+const fs = require('fs');
+const app = express();
+app.use(express.json());
+app.use(express.static('public')); // put test.html in /public
+
+app.post('/api/log-visit', (req, res) => {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
+  const entry = { ip, ...req.body, receivedAt: new Date().toISOString() };
+  
+  fs.appendFileSync('visits.log', JSON.stringify(entry) + '\n');
+  console.log('New visit logged:', entry);
+  
+  res.sendStatus(200);
+});
+
+app.listen(3000, () => console.log('Server running on port 3000'));

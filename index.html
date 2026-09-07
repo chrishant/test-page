@@ -20,19 +20,36 @@
         userAgent: navigator.userAgent,
         platform: navigator.platform,
         language: navigator.language,
+        languages: navigator.languages ? navigator.languages.join(', ') : '',
         screenResolution: `${window.screen.width}x${window.screen.height}`,
+        colorDepth: window.screen.colorDepth,
+        pixelRatio: window.devicePixelRatio,
         viewport: `${window.innerWidth}x${window.innerHeight}`,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezoneOffsetMin: new Date().getTimezoneOffset(),
         referrer: document.referrer || 'direct',
+        cpuCores: navigator.hardwareConcurrency || 'unknown',
+        deviceMemoryGB: navigator.deviceMemory || 'unknown',
+        touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+        cookiesEnabled: navigator.cookieEnabled,
       };
 
-      // Optional: rough IP-based location, no permission prompt needed
+      // Network connection info, if the browser exposes it (mainly Chrome/Android)
+      if (navigator.connection) {
+        info.connectionType = navigator.connection.effectiveType;
+        info.downlinkMbps = navigator.connection.downlink;
+      }
+
+      // IP-based location + ISP, no permission prompt needed
       try {
         const res = await fetch('https://ipapi.co/json/');
         const ipData = await res.json();
+        info.ip = ipData.ip;
         info.ipCity = ipData.city;
         info.ipRegion = ipData.region;
         info.ipCountry = ipData.country_name;
+        info.isp = ipData.org;         // ISP / network operator name
+        info.asn = ipData.asn;         // Autonomous System Number
       } catch (err) {
         info.ipLookupError = 'unavailable';
       }

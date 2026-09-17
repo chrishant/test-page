@@ -1,0 +1,101 @@
+# ==========================================================
+# ROLLBACK - Previous LAN Printer Sharing Script
+# Run PowerShell as Administrator on PC A
+# ==========================================================
+
+Write-Host "Starting rollback..." -ForegroundColor Cyan
+
+# 1. Stop/restart services safely
+$services = @(
+    "Spooler",
+    "LanmanServer",
+    "FDResPub",
+    "fdPHost",
+    "SSDPSRV",
+    "upnphost"
+)
+
+foreach ($service in $services) {
+    if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
+        try {
+            Stop-Service -Name $service -Force -ErrorAction SilentlyContinue
+        } catch {}
+    }
+}
+
+# 2. Restore service startup types
+# Services that are normally Manual/Automatic depending on Windows
+Set-Service -Name "Spooler"   -StartupType Automatic -ErrorAction SilentlyContinue
+Set-Service -Name "LanmanServer" -StartupType Automatic -ErrorAction SilentlyContinue
+
+Set-Service -Name "FDResPub" -StartupType Manual -ErrorAction SilentlyContinue
+Set-Service -Name "fdPHost"  -StartupType Manual -ErrorAction SilentlyContinue
+Set-Service -Name "SSDPSRV"  -StartupType Manual -ErrorAction SilentlyContinue
+Set-Service -Name "upnphost" -StartupType Manual -ErrorAction SilentlyContinue
+
+# 3. Remove the registry value created by the previous script
+$regPath = "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters"
+
+if (Test-Path $regPath) {
+    Remove-ItemProperty `
+        -Path $regPath `
+        -Name "AutoShareWks" `
+        -ErrorAction SilentlyContinue
+}
+
+# 4. Disable the firewall groups that the previous script enabled
+# NOTE:
+# This restores them to disabled rather than their exact previous state.
+Set-NetFirewallRule `
+    -DisplayGroup "Network Discovery" `
+    -Enabled False `
+    -Profile Private `
+    -ErrorAction SilentlyContinue
+
+Set-NetFirewallRule `
+    -DisplayGroup "File and Printer Sharing" `
+    -Enabled False `
+    -Profile Private `
+    -ErrorAction SilentlyContinue
+
+# 5. Unshare printers that were automatically shared
+Get-Printer -ErrorAction SilentlyContinue |
+    Where-Object { $_.Shared -eq $true } |
+    ForEach-Object {
+        try {
+            Set-Printer `
+                -Name $_.Name `
+                -Shared $false `
+                -ErrorAction SilentlyContinue
+
+            Write-Host "Unshared: $($_.Name)" -ForegroundColor Yellow
+        }
+        catch {}
+    }
+
+# 6. Restart important services
+Start-Service -Name "Spooler" -ErrorAction SilentlyContinue
+Start-Service -Name "LanmanServer" -ErrorAction SilentlyContinue
+
+# 7. Return active network profiles to Private
+# (The previous script changed them to Private.)
+# We do NOT automatically change them to Public because
+# we cannot know their original state.
+
+Write-Host ""
+Write-Host "============================================" -ForegroundColor Green
+Write-Host "ROLLBACK COMPLETED"
+Write-Host "============================================" -ForegroundColor Green
+
+Write-Host ""
+Write-Host "Current shared printers:" -ForegroundColor Cyan
+
+Get-Printer -ErrorAction SilentlyContinue |
+    Where-Object { $_.Shared -eq $true } |
+    Select-Object Name, ShareName
+
+Write-Host ""
+Write-Host "Please restart PC A." -ForegroundColor Yellow
+Write-Host ""
+
+Read-Host "Press ENTER to exit"

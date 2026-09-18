@@ -1,1 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Printer Share</title>
+<style>
+  :root {
+    --paper: #f6f3ec;
+    --paper-dark: #ece7db;
+    --ink: #1f2a3c;
+    --ink-soft: #55607a;
+    --stamp: #b3402f;
+    --stamp-dark: #96331f;
+    --line: #d8d0bd;
+    --ok: #2f6b4f;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+  }
+  body {
+    background-image:
+      linear-gradient(var(--paper-dark) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-dark) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: -1px -1px;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .tagline {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 8px 0 36px;
+  }
+  .field {
+    margin-bottom: 20px;
+  }
+  .field label {
+    display: block;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  select, input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 4px;
+    color: var(--ink);
+    font-family: inherit;
+  }
+  select:focus, input:focus {
+    outline: 2px solid var(--ink);
+    outline-offset: 1px;
+  }
+  .row {
+    display: flex;
+    gap: 16px;
+  }
+  .row .field:first-child { flex: 3; }
+  .row .field:last-child { flex: 1; }
 
+  #dropzone {
+    border: 2px dashed var(--line);
+    border-radius: 6px;
+    background: #fffdf8;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  #dropzone.drag {
+    border-color: var(--stamp);
+    background: #fdf2ee;
+  }
+  #dropzone.has-file {
+    border-style: solid;
+    border-color: var(--ink);
+    background: #fff;
+  }
+  #dropzone .icon {
+    font-size: 30px;
+    margin-bottom: 10px;
+    opacity: 0.7;
+  }
+  #dropzone .primary {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  #dropzone .secondary {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  #fileInput { display: none; }
+
+  button#printBtn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 4px;
+    background: var(--stamp);
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+  }
+  button#printBtn:hover:not(:disabled) { background: var(--stamp-dark); }
+  button#printBtn:disabled {
+    background: var(--line);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+
+  #status {
+    margin-top: 18px;
+    font-size: 14px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    display: none;
+  }
+  #status.show { display: block; }
+  #status.info { background: #eef1f6; color: var(--ink-soft); }
+  #status.ok { background: #e8f3ec; color: var(--ok); }
+  #status.err { background: #fbeae7; color: var(--stamp-dark); }
+
+  footer {
+    margin-top: 48px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Printer Share</h1>
+    </header>
+    <p class="tagline">Send a file from this device to a printer on the network.</p>
+
+    <div class="row">
+      <div class="field">
+        <label for="printerSelect">Printer</label>
+        <select id="printerSelect"><option>Loading printers…</option></select>
+      </div>
+      <div class="field">
+        <label for="copies">Copies</label>
+        <input type="number" id="copies" value="1" min="1" max="99">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>File</label>
+      <div id="dropzone">
+        <div class="icon">📄</div>
+        <div class="primary" id="dzPrimary">Drag a file here, or tap to choose</div>
+        <div class="secondary">PDF, images, XPS, EPUB, and more</div>
+      </div>
+      <input type="file" id="fileInput">
+    </div>
+
+    <button id="printBtn" disabled>Print</button>
+    <div id="status"></div>
+
+    <footer>Files stay on this network — nothing leaves your Wi-Fi.</footer>
+  </div>
+
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const dzPrimary = document.getElementById('dzPrimary');
+  const fileInput = document.getElementById('fileInput');
+  const printerSelect = document.getElementById('printerSelect');
+  const copiesInput = document.getElementById('copies');
+  const printBtn = document.getElementById('printBtn');
+  const statusEl = document.getElementById('status');
+
+  let selectedFile = null;
+
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg;
+    statusEl.className = 'show ' + (kind || 'info');
+  }
+  function clearStatus() {
+    statusEl.className = '';
+    statusEl.textContent = '';
+  }
+
+  function updateFile(file) {
+    selectedFile = file || null;
+    if (selectedFile) {
+      dropzone.classList.add('has-file');
+      dzPrimary.textContent = selectedFile.name;
+    } else {
+      dropzone.classList.remove('has-file');
+      dzPrimary.textContent = 'Drag a file here, or tap to choose';
+    }
+    printBtn.disabled = !selectedFile;
+  }
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => updateFile(fileInput.files[0]));
+
+  ['dragenter', 'dragover'].forEach(evt =>
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      dropzone.classList.add('drag');
+    })
+  );
+  ['dragleave', 'dragend'].forEach(evt =>
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      dropzone.classList.remove('drag');
+    })
+  );
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      updateFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  async function loadPrinters() {
+    try {
+      const res = await fetch('/printers');
+      const data = await res.json();
+      printerSelect.innerHTML = '';
+      if (!data.printers || data.printers.length === 0) {
+        printerSelect.innerHTML = '<option value="">No printers found</option>';
+        return;
+      }
+      data.printers.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.name;
+        opt.textContent = p.name;
+        if (data.default && p.name === data.default) opt.selected = true;
+        printerSelect.appendChild(opt);
+      });
+    } catch (err) {
+      printerSelect.innerHTML = '<option value="">Could not load printers</option>';
+      setStatus('Could not reach the printer list: ' + err.message, 'err');
+    }
+  }
+
+  printBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    printBtn.disabled = true;
+    setStatus('Sending to printer…', 'info');
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('printer', printerSelect.value || '');
+    formData.append('copies', copiesInput.value || '1');
+
+    try {
+      const res = await fetch('/print', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        setStatus(data.message || 'Sent to printer.', 'ok');
+        fileInput.value = '';
+        updateFile(null);
+      } else {
+        setStatus(data.error || 'Printing failed.', 'err');
+      }
+    } catch (err) {
+      setStatus('Request failed: ' + err.message, 'err');
+    } finally {
+      printBtn.disabled = !selectedFile;
+    }
+  });
+
+  loadPrinters();
+</script>
+</body>
+</html>
